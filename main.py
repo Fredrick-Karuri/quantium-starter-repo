@@ -1,80 +1,53 @@
-# import csv
-# # with open('data/daily_sales_data_0.csv','r') as file:
-# #     csv_reader=csv.reader(file)
-# #     for row in csv_reader:
-# #         print (row)
 
-# #we first define the input and output paths of our data
-# input_files = ['data/daily_sales_data_0.csv','data/daily_sales_data_1.csv','data/daily_sales_data_2.csv']
-# output_file= 'output/sales.csv'
+import csv
+import os
 
-# product_name='Pink Morsels'
+DATA_DIRECTORY = "./data"
+OUTPUT_FILE_PATH = "./sales_data.csv"
 
-# # we will then define a dictionary to store the total sales for each date and region
-# sales_by_date_region={}
-# #looping over each of the input files
-# for input_file in input_files:
-#     with open (input_file, 'r') as file:
-#         csv_reader = csv.DictReader(file)
+# open the output file
+with open(OUTPUT_FILE_PATH, "w") as output_file:
+    writer = csv.writer(output_file)
 
-#         for row in csv_reader:
-#             if row['product']==product_name:
-#                 sales=int (row['quantity'])*float(row['price'])
-#                 # extracting the date and region from the row
-#                 date=row[date]
-  #              #   region=row[region]
+    # add a csv header
+    header = ["sales", "date", "region"]
+    writer.writerow(header)
 
-#                 # adding the sales to the total for this date and region
-                
-#                 key = (date,region)
-#                 if key in sales_by_date_region:
-#                     sales_by_date_region+=sales
-#                 else:
-#                     sales_by_date_region=sales
+    # iterate through all files in the data directory
+    for file_name in os.listdir(DATA_DIRECTORY):
+        # open the csv file for reading
+        with open(f"{DATA_DIRECTORY}/{file_name}", "r") as input_file:
+            reader = csv.reader(input_file)
+            # iterate through each row in the csv file
+            row_index = 0
+            for input_row in reader:
+                # if this row is not the csv header, process it
+                if row_index > 0:
+                    # collect data from row
+                    product = input_row[0]
+                    raw_price = input_row[1]
+                    quantity = input_row[2]
+                    transaction_date = input_row[3]
+                    #region = input_row[4]
 
-                 
+                    # if this is a pink morsel transaction, process it
+                    if product == "pink morsel":
+                        # finish formatting data
+                        price = float(raw_price[1:])
+                        sale = price * int(quantity)
+
+                        # write the row to output file
+                        output_row = [sale, transaction_date, region]
+
+                        # check if the length of the row matches the length of the header
+                        if len(output_row) == len(header):
+                            writer.writerow(output_row)
+                        else:
+                            print(f"Skipping row {output_row} with incorrect length.")
+
+                # increment row_index
+                row_index += 1
 
 
-# # creating the csv writer in the output file
-
-# with open(output_file,'w',newline='')as file:
-#     fieldnames=['Sales','Date','Region']
-#     csv_writer=csv.DictWriter(file,fieldnames=fieldnames)
-#     csv_writer.writeheader()
-
-#     for key, value in sales_by_date_region.items():
-#         date,region=key
-#         csv_writer.writerow({'Sales':value,'Date':date,'Region':region})
-
-# import pandas as pd
-import pandas as pd
-
-# Read in the CSV files
-df0 = pd.read_csv('data/daily_sales_data_0.csv', delimiter=',', encoding='utf-8')
-df1 = pd.read_csv('data/daily_sales_data_1.csv', delimiter=',', encoding='utf-8')
-dfn = pd.read_csv('data/daily_sales_data_2.csv', delimiter=',', encoding='utf-8')
-
-# Concatenate the DataFrames vertically
-frames = [df0, df1, dfn]
-df = pd.concat(frames, axis=0, ignore_index=True)
-
-# Filter the DataFrame to only include rows with Pink Morsels
-df = df.loc[df['product'] == 'Pink Morsels']
-
-# Combine the quantity and price columns into a new sales column
-df['sales'] = df['quantity'] * df['price']
-
-# Drop the quantity and price columns
-df.drop(['quantity', 'price'], axis=1, inplace=True)
-
-# Select only the columns we want in the output file
-df = df[['sales', 'date', 'region']]
-
-# Check if the DataFrame contains data
-if df.shape[0] > 0:
-    # Write the DataFrame to a CSV file
-    df.to_csv('output.csv', index=False)
-else:
-    print("No data found in DataFrame.")
 
 
